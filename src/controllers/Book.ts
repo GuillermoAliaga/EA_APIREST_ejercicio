@@ -101,5 +101,60 @@ const deleteBook = async (req: Request<{ bookId: string }>, res: Response, next:
     }
 };
 
+const añadirtag = async (req: Request<{ bookId: string}>, res: Response, next: NextFunction) => {
+
+    const bookId = req.params.bookId;
+    const tipotag = req.body.tag;
+    try {
+  
+        const book = await BookService.añadirtag(bookId, tipotag);
+
+
+        if (book) {
+
+            res.status(200).json({ book });
+        } else {
+
+            res.status(404).json({ message: 'not found' });
+        }
+    } catch (error) {
+
+        next(error);
+    }
+};
+
+const remplazarTags = async (req: Request<{ bookId: string}>, res: Response, next: NextFunction) => {
+    const bookId = req.params.bookId;
+    const tagIds = req.body.tags;
+
+    try {
+        const book = await BookService.remplazarTags(bookId, tagIds);
+
+        if (book) {
+            res.status(200).json({ book });
+        } else {
+            res.status(404).json({ message: 'not found' });
+        }
+    } catch (error) {
+        next(error);
+    }
+};
+
+const deleteTag = async (req: Request<{ bookId: string; tag: string }>, res: Response, next: NextFunction) => {
+    const bookId = req.params.bookId;
+    const tag = req.params.tag;
+
+    try {
+        const book = await BookService.deleteTag(bookId, tag);
+
+        if (book) {
+            res.status(200).json({ book });
+        } else {
+            res.status(404).json({ message: 'not found' });
+        }
+    } catch (error) {
+        next(error);
+    }
+};
 // Exportamos todas las funciones para poder utilizarlas en las rutas
-export default { createBook, readBook, readAll, updateBook, deleteBook };
+export default { createBook, readBook, readAll, updateBook, deleteBook, añadirtag,remplazarTags, deleteTag };

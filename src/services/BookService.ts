@@ -1,12 +1,15 @@
+
 import Book, { IBook } from '../models/Book';
+import Tag from '../models/Tag';
 
 // Funcion que se encarga de crear un libro en la base de datos
-export const createBook = (data: IBook) => {
-    // Creamos un nuevo libro usando los datos que hemos recibido
-    const book = new Book(data);
+export const createBook = async (data: IBook) => {
 
-    // Guardamos el libro en la base de datos y devolvemos el resultado
-    return book.save();
+  const tagDocs = await Tag.find({ name: { $in: data.tags } });
+  const tagIds = tagDocs.map(t => t._id);
+
+  const book = new Book({ ...data, tags: tagIds });
+  return book.save();
 };
 
 // Funcion que busca un libro por su ID en la base de datos
@@ -34,6 +37,48 @@ export const deleteBook = (bookId: string) => {
     return Book.findByIdAndDelete(bookId);
 };
 
+export const añadirtag =async (bookId: string, tipotag: string) => {
+const tag = await Tag.findOne({ name: tipotag });
+ if (!tag) {
+     throw new Error(`Tag no encontrado: ${tipotag}`);
+ }
+ const book = await Book.findByIdAndUpdate(
+    bookId,
+    { $addToSet: { tags: tag._id } },
+    { new: true }
+  ).populate('tags', 'name');
+
+  return book;
+};
+
+export const remplazarTags = async (bookId: string, nombresTags: string[]) => {
+    const tagDocs = await Tag.find({ name: { $in: nombresTags } });
+    const tagIds = tagDocs.map(t => t._id);
+
+    const book = await Book.findByIdAndUpdate(
+        bookId,
+        { tags: tagIds },
+        { new: true }
+    ).populate('authors').populate('tags', 'name');
+
+    return book;
+};
+
+export const deleteTag=async (bookId: string, tipoTag: string) => {
+    const tag = await Tag.findOne({ name: tipoTag });
+    if (!tag) {
+        throw new Error(`Tag no encontrado: ${tipoTag}`);
+    }
+
+    const book = await Book.findByIdAndUpdate(
+        bookId,
+        { $pull: { tags: tag._id } },
+        { new: true }
+    ).populate('authors').populate('tags', 'name');
+
+    return book;
+};
+
 // Exportamos todas las funciones para poder utilizarlas desde el controlador
 export default {
     createBook,
@@ -44,5 +89,11 @@ export default {
 
     updateBook,
 
-    deleteBook
+    deleteBook,
+
+    añadirtag,
+
+    remplazarTags,
+
+    deleteTag
 };

@@ -38,7 +38,7 @@ const BookSchema: Schema = new Schema(
         publishedYear: { type: Number, min: 1450, max: 2100 },
         pages: { type: Number, min: 1 },
         language: { type: String, enum: BOOK_LANGUAGES, default: 'es' },
-        tags: { type: [String], enum: BOOK_TAGS, default: [] },
+        tags: [{ type: Schema.Types.ObjectId, ref: 'Tag' }],
         price: { type: Number, min: 0 }
     },
     {
