@@ -146,7 +146,7 @@ router.delete('/:bookId', ValidateId('bookId'), controller.deleteBook);
  *       404: { $ref: '#/components/responses/NotFound' }
  *       422: { $ref: '#/components/responses/Unprocessable' }
  */
-router.post('/:bookId/tags', ValidateId('bookId'), controller.añadirtag);
+router.post('/:bookId/tags', ValidateId('bookId'), ValidateJoi(Schemas.book.addTag), controller.añadirtag);
 
 /**
  * @openapi
@@ -175,7 +175,7 @@ router.post('/:bookId/tags', ValidateId('bookId'), controller.añadirtag);
  *       404: { $ref: '#/components/responses/NotFound' }
  *       422: { $ref: '#/components/responses/Unprocessable' }
  */
-router.put('/:bookId/tags', ValidateId('bookId'), controller.remplazarTags);
+router.put('/:bookId/tags', ValidateId('bookId'), ValidateJoi(Schemas.book.replaceTags), controller.remplazarTags);
 
 /**
  * @openapi

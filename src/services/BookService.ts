@@ -3,9 +3,9 @@ import Book, { IBook } from '../models/Book';
 import Tag from '../models/Tag';
 
 // Funcion que se encarga de crear un libro en la base de datos
-export const createBook = async (data: IBook) => {
-
-  const tagDocs = await Tag.find({ name: { $in: data.tags } });
+export const createBook = async (data: Omit<IBook, 'tags'> & { tags?: string[] }) => {
+  const tagNames = data.tags ?? [];
+  const tagDocs = await Tag.find({ name: { $in: tagNames } });
   const tagIds = tagDocs.map(t => t._id);
 
   const book = new Book({ ...data, tags: tagIds });
@@ -15,20 +15,32 @@ export const createBook = async (data: IBook) => {
 // Funcion que busca un libro por su ID en la base de datos
 export const getBookById = (bookId: string) => {
     // Buscamos el libro por su ID y obtenemos tambien los datos de sus autores
-    return Book.findById(bookId).populate('authors');
+    return Book.findById(bookId).populate('authors').populate('tags', 'name').lean();
 };
 
 // Funcion que busca todos los libros de la base de datos
 export const getAllBooks = () => {
     // Buscamos todos los libros y obtenemos tambien los datos de sus autores
-    return Book.find().populate('authors');
+    return Book.find().populate('authors').populate('tags', 'name').lean();
 };
 
 // Funcion que se encarga de actualizar un libro
-export const updateBook = (bookId: string, data: IBook) => {
-    // Buscamos el libro por su ID y actualizamos sus datos.
-    // Con new: true devolvemos el documento actualizado y también poblamos autores.
-    return Book.findByIdAndUpdate(bookId, data, { new: true }).populate('authors');
+export const updateBook = async (
+  bookId: string,
+  data: Omit<IBook, 'tags'> & { tags?: string[] }
+) => {
+  const tagNames = data.tags ?? [];
+  const tagDocs = await Tag.find({ name: { $in: tagNames } });
+  const tagIds = tagDocs.map(t => t._id);
+
+  return Book.findByIdAndUpdate(
+    bookId,
+    { ...data, tags: tagIds },
+    { returnDocument: 'after' }
+  )
+    .populate('authors')
+    .populate('tags', 'name')
+    .lean();
 };
 
 // Funcion que se encarga de eliminar un libro de la base de datos
@@ -45,8 +57,8 @@ const tag = await Tag.findOne({ name: tipotag });
  const book = await Book.findByIdAndUpdate(
     bookId,
     { $addToSet: { tags: tag._id } },
-    { new: true }
-  ).populate('tags', 'name');
+    { returnDocument: 'after' }
+  ).populate('authors').populate('tags', 'name').lean();
 
   return book;
 };
@@ -58,8 +70,8 @@ export const remplazarTags = async (bookId: string, nombresTags: string[]) => {
     const book = await Book.findByIdAndUpdate(
         bookId,
         { tags: tagIds },
-        { new: true }
-    ).populate('authors').populate('tags', 'name');
+        { returnDocument: 'after' }
+    ).populate('authors').populate('tags', 'name').lean();
 
     return book;
 };
@@ -73,8 +85,8 @@ export const deleteTag=async (bookId: string, tipoTag: string) => {
     const book = await Book.findByIdAndUpdate(
         bookId,
         { $pull: { tags: tag._id } },
-        { new: true }
-    ).populate('authors').populate('tags', 'name');
+        { returnDocument: 'after' }
+    ).populate('authors').populate('tags', 'name').lean();
 
     return book;
 };

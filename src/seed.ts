@@ -2,7 +2,8 @@ import mongoose from 'mongoose';
 import { config } from './config/config';
 import Logging from './library/Logging';
 import Author from './models/Author';
-import Book from './models/Book';
+import Book, { BOOK_TAGS } from './models/Book';
+import Tag from './models/Tag';
 import { authorsSeed, booksSeed } from './seed-data';
 
 // Llena la base de datos con los datos de ejemplo de seed-data.ts.
@@ -21,11 +22,13 @@ const seed = async () => {
     if (reset) {
         const authors = await Author.deleteMany({});
         const books = await Book.deleteMany({});
+        const tags = await Tag.deleteMany({});
         Logging.warning(`Borrados ${authors.deletedCount} autores y ${books.deletedCount} libros`);
     }
 
     const authorsInDb = await Author.countDocuments();
     const booksInDb = await Book.countDocuments();
+  
 
     if (authorsInDb > 0 || booksInDb > 0) {
         Logging.warning('La base de datos ya tiene datos. Para rehacerla: npm run seed -- --reset');
@@ -36,8 +39,11 @@ const seed = async () => {
     const createdAuthors = await Author.create(authorsSeed);
     Logging.info(`Autores creados: ${createdAuthors.length}`);
 
+    const createdTags = await Tag.create(BOOK_TAGS.map((name) => ({ name })));
+    Logging.info(`Etiquetas creadas: ${createdTags.length}`);
+
     // Cada libro trae los emails de sus autores; aquí se cambian por los ids que les ha dado MongoDB
-    const booksWithAuthors = booksSeed.map(({ authorEmails, ...book }) => {
+    const booksWithAuthors = booksSeed.map(({ authorEmails, tags, ...book }) => {
         const authors = authorEmails.map((email) => {
             const author = createdAuthors.find((created) => created.email === email);
 
@@ -48,7 +54,20 @@ const seed = async () => {
             return author._id;
         });
 
-        return { ...book, authors };
+        
+    
+
+    const tagIds = (tags ?? []).map((tagName) => {
+            const tag = createdTags.find((created) => created.name === tagName);
+
+            if (!tag) {
+                throw new Error(`En seed-data.ts hay un libro con un tag que no existe: ${tagName}`);
+            }
+
+            return tag._id;
+        });
+
+        return { ...book, authors, tags: tagIds };
     });
 
     const createdBooks = await Book.insertMany(booksWithAuthors);

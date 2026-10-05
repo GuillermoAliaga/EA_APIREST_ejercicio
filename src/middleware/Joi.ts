@@ -164,6 +164,16 @@ export const Schemas = {
 
             // El precio no puede ser negativo
             price: Joi.number().min(0)
-        })
-    }
+        }),
+
+        addTag: Joi.object<{ tag: string }>({
+        tag: Joi.string().valid(...BOOK_TAGS).required().example('fantasia')
+    }),
+
+    
+    replaceTags: Joi.object<{ tags: string[] }>({
+        tags: Joi.array().items(Joi.string().valid(...BOOK_TAGS)).required().example(['novela', 'historia'])
+    })
+    },
+
 };

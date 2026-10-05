@@ -14,7 +14,7 @@ export interface IBook {
     publishedYear?: number;
     pages?: number;
     language?: 'es' | 'ca' | 'en';
-    tags?: string[];
+    tags?: mongoose.Types.ObjectId[] | string[];
     price?: number;
 }
 

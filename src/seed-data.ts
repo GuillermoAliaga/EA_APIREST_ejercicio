@@ -77,7 +77,7 @@ export const booksSeed: BookSeed[] = [
         publishedYear: 1605,
         pages: 863,
         language: 'es',
-        tags: ['novela'],
+        tags: ['novela', 'historia'],
         price: 19.9
     },
     {
